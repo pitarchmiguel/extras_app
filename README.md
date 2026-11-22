@@ -39,11 +39,11 @@ La base de datos y el bucket ya están configurados. `supabase/schema.sql` repro
 
 Cada usuario solo puede leer y escribir sus propios registros y los archivos de su carpeta. Los adjuntos no son públicos. Se verificó RLS y no se detectaron avisos de seguridad en el análisis de Supabase.
 
-En **Authentication → URL Configuration**, establecer la URL definitiva como **Site URL** y permitirla en **Redirect URLs**, junto con `http://localhost:5173` durante el desarrollo. Esto permite que los correos de confirmación y recuperación vuelvan a la app. Usar SMTP propio para producción si se necesitan correos fuera de las limitaciones del proveedor de pruebas de Supabase.
+En **Authentication → URL Configuration**, establecer `https://extras-app-pitarch.vercel.app` como **Site URL** y permitir `https://extras-app-pitarch.vercel.app/**` en **Redirect URLs**, junto con `http://localhost:5173` durante el desarrollo. Esto permite que los correos de confirmación y recuperación vuelvan a la app. Usar SMTP propio para producción si se necesitan correos fuera de las limitaciones del proveedor de pruebas de Supabase.
 
 ## Despliegue
 
-Importar `pitarchmiguel/extras_app` en Vercel como proyecto Vite: instalación `npm ci`, compilación `npm run build`, salida `dist`. El cliente ya tiene la URL y clave publicable del proyecto; las variables de `.env.example` permiten sustituirlas por otro entorno. No subir `.env`.
+La app está publicada en https://extras-app-pitarch.vercel.app y enlazada a `pitarchmiguel/extras_app`; los cambios en `main` se despliegan automáticamente. Configuración Vite: instalación `npm ci`, compilación `npm run build`, salida `dist`. El cliente ya tiene la URL y clave publicable del proyecto; las variables de `.env.example` permiten sustituirlas por otro entorno. No subir `.env`.
 
 ## Comprobaciones
 
@@ -51,4 +51,6 @@ Importar `pitarchmiguel/extras_app` en Vercel como proyecto Vite: instalación `
 - Pruebas de duraciones, estados independientes y exportación segura.
 - Verificación del bucket privado, límite de tamaño y políticas de propiedad.
 
-No se han registrado horas reales ni creado cuentas personales durante la preparación. La validación visual y el flujo completo de correo, acceso y subida con una cuenta real deben verificarse en el alojamiento final.
+No se han registrado horas reales ni creado cuentas personales durante la preparación. Se verificaron en el navegador el diseño móvil, la validación de duración, el alta en demostración, el cálculo de totales y los estados independientes de pago y firma. Se probó el aislamiento RLS entre dos identidades con todos los datos de prueba revertidos.
+
+Pendiente: configurar las URL de autenticación anteriores y verificar el flujo completo de correo, acceso y subida con una cuenta real. La sesión de Supabase del navegador no tiene acceso al proyecto que administra la conexión de Supabase; se necesita entrar con la cuenta que tenga acceso a `mlxpvghndzuevytojwwf`.
