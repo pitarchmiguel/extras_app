@@ -1,56 +1,42 @@
 # Extras
 
-Aplicación personal para registrar horas extras y festivas, controlar pagos y firmas y adjuntar la foto de cada hoja. Interfaz en español, adaptable a móvil y escritorio.
+Registro personal de horas extras y festivas en una única pantalla.
 
-## Funciones
+App: https://extras-app-pitarch.vercel.app
 
-- Alta y edición de registros por fecha, tipo y duración en horas y minutos.
-- Pago y firma del jefe como estados independientes, editables desde la tabla.
-- Fotografías JPG, PNG y WebP o PDF, hasta 10 MB, en un bucket privado.
-- Vista previa de documentos mediante enlaces temporales de cinco minutos.
-- Resumen mensual, gráfico por semanas, búsqueda, filtros y paginación.
-- Exportación CSV con los filtros activos y protección frente a fórmulas.
-- Registro e inicio de sesión por correo y contraseña; recuperación de contraseña.
-- Modo de demostración separado de los datos reales. Sus cambios se pierden al recargar y nunca se importan a la cuenta.
-- Archivado reversible en base de datos mediante `deleted_at`. Las fotos anteriores se conservan en privado al reemplazarlas para evitar pérdidas accidentales.
+## Uso
+
+Pulsa **Añadir horas** y completa fecha, tipo y duración. Puedes marcar si están pagadas y si la hoja está firmada, y adjuntar una foto o PDF de hasta 10 MB. Los registros se guardan en Supabase. Desde la lista puedes editar, cambiar los estados, ver la hoja o archivar un registro. Los filtros permiten consultar por mes, pago o firma.
+
+No hay cuentas, espacio personal, demostración, gráficos ni pantallas de inicio de sesión dentro de la app. La protección privada del alojamiento en Vercel se mantiene: si no tienes sesión de Vercel en un dispositivo, el alojamiento puede pedir acceso antes de abrir la app.
 
 ## Desarrollo
 
-Requiere Node.js 22 o posterior.
+Node.js 22 o posterior:
 
 ```sh
 npm ci
-cp .env.example .env
-npm run dev
-```
-
-```sh
 npm run build
 npm test
 ```
 
-React, TypeScript, Vite y Supabase. Las dependencias están fijadas y el lockfile se incluye para instalaciones reproducibles. La clave publicable de Supabase es pública por diseño: la protección reside en Auth y las políticas RLS; nunca añadir una clave secreta o `service_role` al cliente.
+Para desarrollo completo utiliza Vercel CLI (`vercel dev`) con el proyecto enlazado y las variables del entorno. `npm run dev` solo inicia la interfaz Vite; necesita la API de servidor para leer y guardar datos.
 
-## Supabase
+React + TypeScript + Vite. `api/entries.js` es el intermediario de servidor que llama a la función Supabase `personal-ledger`. La clave `EXTRAS_API_KEY` se almacena como variable sensible del servidor Vercel; nunca se añade al código ni se envía al navegador. La función verifica su hash antes de cualquier operación.
 
-Proyecto: `extras-app` (`mlxpvghndzuevytojwwf`), región `eu-west-1`.
+## Datos y privacidad
 
-La base de datos y el bucket ya están configurados. `supabase/schema.sql` reproduce el esquema inicial y las políticas aplicadas mediante la migración remota `create_overtime_entries_and_private_storage`. No ejecutar de nuevo sobre la base de datos existente.
+Supabase: `mlxpvghndzuevytojwwf`, región `eu-west-1`.
 
-Cada usuario solo puede leer y escribir sus propios registros y los archivos de su carpeta. Los adjuntos no son públicos. Se verificó RLS y no se detectaron avisos de seguridad en el análisis de Supabase.
+- `overtime_entries` mantiene RLS; no tiene acceso público a los registros personales.
+- La API sirve un solo registro personal, sin cuentas ni datos separados por usuario.
+- El bucket `overtime-sheets` es privado. Las subidas usan permisos temporales para una ruta concreta y las vistas previas caducan a los cinco minutos.
+- Las duraciones se almacenan en minutos enteros; el servidor valida fechas, estados y archivos.
+- Archivar conserva el registro con `deleted_at`. Reemplazar una hoja conserva la anterior en privado.
+- `supabase/schema.sql` y `supabase/personal-ledger.sql` documentan los cambios ya aplicados. No volver a ejecutarlos sobre el proyecto existente.
 
-En **Authentication → URL Configuration**, establecer `https://extras-app-pitarch.vercel.app` como **Site URL** y permitir `https://extras-app-pitarch.vercel.app/**` en **Redirect URLs**, junto con `http://localhost:5173` durante el desarrollo. Esto permite que los correos de confirmación y recuperación vuelvan a la app. Usar SMTP propio para producción si se necesitan correos fuera de las limitaciones del proveedor de pruebas de Supabase.
+La API depende de la protección de despliegues de Vercel ya activada en el proyecto. **No desactivarla** sin añadir antes una protección equivalente. La API rechaza dominios personalizados porque la configuración actual de Vercel los excluye de su protección.
 
 ## Despliegue
 
-La app está publicada en https://extras-app-pitarch.vercel.app y enlazada a `pitarchmiguel/extras_app`; los cambios en `main` se despliegan automáticamente. Configuración Vite: instalación `npm ci`, compilación `npm run build`, salida `dist`. El cliente ya tiene la URL y clave publicable del proyecto; las variables de `.env.example` permiten sustituirlas por otro entorno. No subir `.env`.
-
-## Comprobaciones
-
-- Compilación TypeScript y Vite.
-- Pruebas de duraciones, estados independientes y exportación segura.
-- Verificación del bucket privado, límite de tamaño y políticas de propiedad.
-
-No se han registrado horas reales ni creado cuentas personales durante la preparación. Se verificaron en el navegador el diseño móvil, la validación de duración, el alta en demostración, el cálculo de totales y los estados independientes de pago y firma. Se probó el aislamiento RLS entre dos identidades con todos los datos de prueba revertidos.
-
-Pendiente: configurar las URL de autenticación anteriores y verificar el flujo completo de correo, acceso y subida con una cuenta real. La sesión de Supabase del navegador no tiene acceso al proyecto que administra la conexión de Supabase; se necesita entrar con la cuenta que tenga acceso a `mlxpvghndzuevytojwwf`.
+Los cambios en `main` de `pitarchmiguel/extras_app` se publican automáticamente en Vercel. Compilación: `npm run build`; salida: `dist`. Los cambios de la función Supabase se despliegan por separado, manteniendo su verificación de credencial de servidor.
